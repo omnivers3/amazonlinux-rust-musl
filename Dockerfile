@@ -1,5 +1,7 @@
 # ----------------------------------------------------------------------------------------------------
-# OMNIVERS3 MUSL AWS LAMBDA BUILDER FOR RUST - https://github.com/omnivers3/amazonlinux-rust-musl
+# OMNIVERS3 AWS LAMBDA BUILDER FOR RUST MUSL
+#
+# - https://github.com/omnivers3/amazonlinux-rust-musl
 #
 # BUILDER STAGE
 #
@@ -9,6 +11,11 @@
 #
 # * Configurable, via ARG, to target any rust toolchain
 # * Configurable, via ENV, to specify pathing options which are used in volumes
+#
+# ARGS
+# - TOOLCHAIN=stable
+# - OPENSSL_VERSION=1.1.1
+# - SRC="."
 #
 # VOLUMES
 # - ENV: BUILD_DIR=/build
@@ -36,7 +43,7 @@ RUN mkdir -p "${CARGO_BIN}" \
 # Setup MUSL tools and config
 
 ENV PREFIX=/musl \
-    MUSL_VERSION=1.1.20
+    MUSL_VERSION=1.1.22
 
 RUN mkdir -p "${PREFIX}"
 
@@ -72,18 +79,15 @@ ADD https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz .
 
 # Fix for "linux/mman.h: No such file or directory"
 # https://github.com/openssl/openssl/issues/7207
-# RUN yum install kernel-headers --disableexcludes=all
-# RUN yum install linux-headers --disableexcludes=all
-# RUN yum install kernel-devel
-# RUN cp /sys/mman.h /linux/mman.h
-# RUN cp /usr/include/sys/mman.h /usr/include/linux/mman.h
-# RUN cp /usr/include/sys/mman.h linux/mman.h
-# ./Configure --prefix=$OPENSSL_DIR linux-x86_64 no-shared no-async no-engine -DOPENSSL_NO_SECURE_MEMORY
+# Added "-DOPENSSL_NO_SECURE_MEMORY" flag to "./Configure" line
+# Should be remove ASAP because it weakens the security
 
 RUN echo "Building OpenSSL" \
     && tar -xzf "openssl-${OPENSSL_VERSION}.tar.gz" \
     && cd openssl-${OPENSSL_VERSION} \
     && ./Configure no-async no-afalgeng no-shared no-zlib -fPIC --prefix=${PREFIX} --openssldir=${PREFIX}/ssl linux-x86_64 -DOPENSSL_NO_SECURE_MEMORY \
+    # This is the desired command parameter set
+    # && ./Configure no-async no-afalgeng no-shared no-zlib -fPIC --prefix=${PREFIX} --openssldir=${PREFIX}/ssl linux-x86_64 \
     && make depend \
     && make install
 
@@ -107,6 +111,7 @@ WORKDIR ${BUILD_DIR}
 RUN mkdir -p "${BUILD_DIR}" \
  && mkdir -p "${OUTPUT_DIR}" \
  && mkdir .cargo
+
 ADD cargo-config.toml .cargo/config
 
 ENTRYPOINT ["/bin/sh"]
