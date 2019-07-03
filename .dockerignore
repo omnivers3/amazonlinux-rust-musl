@@ -1,0 +1,7 @@
+# Ignore everything
+**
+
+# Source Files
+!/src/**
+!/cargo-config.toml
+!/Cargo.toml
