@@ -3,8 +3,6 @@
 #
 # - https://github.com/omnivers3/amazonlinux-rust-musl
 #
-# BUILDER STAGE
-#
 # - Baseline from amazonlinux:latest to ensure maximum environment compatibility with AWS cloud
 # - Add and configure OPENSSL
 # - Add and configure MUSL build tools and configuration
@@ -15,13 +13,13 @@
 # ARGS
 # - TOOLCHAIN=stable
 # - OPENSSL_VERSION=1.1.1
-# - SRC="."
 #
 # VOLUMES
 # - ENV: BUILD_DIR=/build
 # - ENV: EXPORT_DIR=/export
 #
 # ----------------------------------------------------------------------------------------------------
+
 FROM amazonlinux:latest AS builder
 
 # Setup Rust, Rustup, etc
@@ -95,9 +93,6 @@ ENV OPENSSL_DIR=${PREFIX} \
     OPENSSL_STATIC=true
 
 # Prep build environment conventions
-
-# Enable overridable path to local source files defaulting to current
-ARG SRC="."
 
 # Add tools to the PATH
 ENV BUILD_DIR=/build \
